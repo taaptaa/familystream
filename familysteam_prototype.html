@@ -1,0 +1,1227 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Family Steam — Interactive Prototype</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --red:#B60102;
+  --black:#0D0D0D;
+  --white:#FFFFFF;
+  --gray:#F5F5F5;
+  --gray2:#E8E8E8;
+  --muted:#888888;
+  --radius:12px;
+}
+
+body{
+  background:#1C1C1C;
+  font-family:'DM Sans',sans-serif;
+  min-height:100vh;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:flex-start;
+  padding:32px 20px 40px;
+}
+
+/* ─── CANVAS LABEL ─── */
+.canvas-title{
+  font-family:'Bebas Neue',cursive;
+  font-size:12px;
+  color:#555;
+  letter-spacing:3px;
+  margin-bottom:24px;
+  text-align:center;
+}
+.canvas-title span{color:var(--red)}
+
+/* ─── SCREEN TABS ─── */
+.screen-tabs{
+  display:flex;
+  gap:6px;
+  margin-bottom:20px;
+  flex-wrap:wrap;
+  justify-content:center;
+  max-width:520px;
+}
+.stab{
+  background:#222;
+  color:#666;
+  font-family:'DM Sans',sans-serif;
+  font-size:10px;
+  font-weight:600;
+  padding:5px 12px;
+  border-radius:20px;
+  cursor:pointer;
+  border:1px solid transparent;
+  transition:all .2s;
+  letter-spacing:.3px;
+}
+.stab:hover{color:#aaa;border-color:#444}
+.stab.active{background:var(--red);color:#fff;border-color:var(--red)}
+
+/* ─── DEVICE FRAME ─── */
+.device-wrapper{
+  position:relative;
+}
+.device{
+  width:320px;
+  height:640px;
+  background:var(--white);
+  border-radius:36px;
+  overflow:hidden;
+  position:relative;
+  border:2px solid #2a2a2a;
+  box-shadow:0 0 0 1px #111, 0 20px 60px rgba(0,0,0,0.6), inset 0 0 0 1px rgba(255,255,255,0.05);
+}
+
+/* ─── STATUS BAR ─── */
+.status{
+  height:28px;
+  background:var(--black);
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  padding:0 16px;
+  flex-shrink:0;
+}
+.status span{font-size:10px;color:#fff;font-weight:500}
+
+/* ─── BOTTOM NAV ─── */
+.bnav{
+  position:absolute;
+  bottom:0;left:0;right:0;
+  height:60px;
+  background:var(--black);
+  display:flex;
+  align-items:center;
+  justify-content:space-around;
+  border-top:2px solid var(--red);
+  z-index:10;
+}
+.ni{display:flex;flex-direction:column;align-items:center;gap:3px;cursor:pointer;padding:4px 10px;transition:opacity .15s}
+.ni:active{opacity:.7}
+.ni.on .ni-ico{color:var(--red)}
+.ni.on .ni-txt{color:var(--red)}
+.ni-ico{font-size:14px;color:#555}
+.ni-txt{font-size:9px;color:#555;font-weight:500}
+
+/* ─── SCREEN CONTAINER ─── */
+.screen-shell{
+  height:calc(640px - 28px - 60px);
+  overflow:hidden;
+  position:relative;
+  background:var(--gray);
+  flex-shrink:0;
+}
+
+/* Each screen */
+.screen{
+  position:absolute;
+  inset:0;
+  overflow-y:auto;
+  overflow-x:hidden;
+  background:var(--gray);
+  display:flex;
+  flex-direction:column;
+  opacity:0;
+  pointer-events:none;
+  transform:translateX(30px);
+  transition:opacity .25s ease, transform .25s ease;
+}
+.screen.active{
+  opacity:1;
+  pointer-events:all;
+  transform:translateX(0);
+}
+.screen::-webkit-scrollbar{width:3px}
+.screen::-webkit-scrollbar-thumb{background:var(--red);border-radius:2px}
+
+/* ══════════════════════════
+   SHARED COMPONENTS
+══════════════════════════ */
+.s-header{
+  background:var(--black);
+  padding:16px;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  flex-shrink:0;
+}
+.brand{font-family:'Bebas Neue',cursive;font-size:26px;color:var(--white);letter-spacing:2px}
+.brand span{color:var(--red)}
+.header-sub{font-size:11px;color:#aaa;margin-top:1px}
+
+.sub-header{
+  background:var(--black);
+  padding:14px 16px;
+  display:flex;
+  align-items:center;
+  gap:12px;
+  flex-shrink:0;
+}
+.back{
+  width:28px;height:28px;
+  background:rgba(255,255,255,0.08);
+  border-radius:7px;
+  display:flex;align-items:center;justify-content:center;
+  font-size:13px;color:#fff;cursor:pointer;
+  transition:background .15s;
+}
+.back:hover{background:rgba(255,255,255,0.16)}
+.page-title{font-family:'Bebas Neue',cursive;font-size:22px;color:#fff;letter-spacing:1px}
+
+/* SECTION */
+.sec{padding:12px 12px 0;flex-shrink:0}
+.sec-hd{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
+.sec-title{font-family:'Bebas Neue',cursive;font-size:18px;color:var(--black);letter-spacing:1px}
+.see-all{font-size:11px;color:var(--red);font-weight:500;cursor:pointer;padding:4px 0;}
+.see-all:hover{text-decoration:underline}
+
+/* SPACER */
+.sp{height:12px;flex-shrink:0}
+.sp8{height:8px;flex-shrink:0}
+.pb{height:20px;flex-shrink:0}
+
+/* BADGE */
+.badge{
+  display:inline-block;
+  background:var(--red);
+  color:#fff;
+  font-size:9px;
+  font-weight:700;
+  padding:2px 7px;
+  border-radius:4px;
+  letter-spacing:1px;
+  margin-bottom:7px;
+}
+
+/* CARD BASE */
+.card{
+  background:#fff;
+  border-radius:14px;
+  padding:14px;
+  flex-shrink:0;
+}
+
+/* ══════════════════════════
+   SCREEN 1 — HOMEPAGE
+══════════════════════════ */
+.hero{
+  background:var(--black);
+  margin:12px;
+  border-radius:16px;
+  padding:20px 16px;
+  position:relative;
+  overflow:hidden;
+  flex-shrink:0;
+}
+.hero::after{
+  content:'';position:absolute;right:-20px;top:-20px;
+  width:120px;height:120px;background:var(--red);border-radius:50%;opacity:0.08;
+}
+.hero-tag{background:var(--red);color:#fff;font-size:9px;font-weight:700;padding:3px 8px;border-radius:4px;display:inline-block;margin-bottom:8px;letter-spacing:1px}
+.hero-title{font-family:'Bebas Neue',cursive;font-size:30px;color:#fff;line-height:1.1}
+.hero-title span{color:var(--red)}
+.hero-sub{font-size:11px;color:#aaa;margin-top:4px;margin-bottom:14px}
+.hero-btn{
+  background:var(--red);color:#fff;font-size:11px;font-weight:600;
+  padding:8px 16px;border-radius:8px;border:none;cursor:pointer;letter-spacing:0.5px;
+  transition:opacity .15s, transform .1s;
+}
+.hero-btn:hover{opacity:.9}
+.hero-btn:active{transform:scale(.97)}
+
+.promo-strip{
+  background:var(--red);margin:0 12px;border-radius:10px;
+  padding:10px 14px;display:flex;align-items:center;gap:10px;flex-shrink:0;
+  cursor:pointer;transition:opacity .15s;
+}
+.promo-strip:hover{opacity:.9}
+.promo-strip .pi{font-size:18px}
+.promo-txt{font-size:11px;color:#fff;font-weight:600;line-height:1.4}
+.promo-txt small{font-weight:400;opacity:0.85}
+
+/* service scroll */
+.svc-scroll{display:flex;gap:10px;overflow-x:auto;padding-bottom:8px;padding-right:12px}
+.svc-scroll::-webkit-scrollbar{height:3px}
+.svc-scroll::-webkit-scrollbar-thumb{background:var(--red)}
+.svc-card{
+  background:#fff;border-radius:12px;padding:14px 12px;
+  min-width:130px;flex-shrink:0;cursor:pointer;
+  border:1.5px solid transparent;transition:border-color .2s, transform .15s;
+  position:relative;overflow:hidden;
+}
+.svc-card.pop::before{
+  content:'TOP';position:absolute;top:8px;right:-6px;
+  background:var(--red);color:#fff;font-size:8px;font-weight:700;
+  padding:2px 12px 2px 6px;letter-spacing:1px;
+}
+.svc-card:hover{border-color:var(--red);transform:translateY(-2px)}
+.svc-card:active{transform:translateY(0)}
+.svc-ico{width:36px;height:36px;background:var(--black);border-radius:8px;display:flex;align-items:center;justify-content:center;margin-bottom:8px;font-size:16px}
+.svc-name{font-size:12px;font-weight:600;color:var(--black);margin-bottom:2px}
+.svc-price{font-family:'Bebas Neue',cursive;font-size:17px;color:var(--red);letter-spacing:.5px}
+.svc-time{font-size:9px;color:var(--muted)}
+
+/* stats */
+.stats{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin:12px 12px 0;flex-shrink:0}
+.stat{background:#fff;border-radius:10px;padding:10px 8px;text-align:center}
+.stat-n{font-family:'Bebas Neue',cursive;font-size:22px;color:var(--red)}
+.stat-l{font-size:9px;color:var(--muted);line-height:1.3}
+
+/* testi */
+.testi-scroll{display:flex;gap:10px;overflow-x:auto;padding-bottom:8px;padding-right:12px}
+.testi-scroll::-webkit-scrollbar{height:3px}
+.testi-scroll::-webkit-scrollbar-thumb{background:var(--red)}
+.tc{background:#fff;border-radius:12px;padding:12px;min-width:200px;flex-shrink:0}
+.tc .stars{color:var(--red);font-size:11px;margin-bottom:4px}
+.tc .quote{font-size:11px;color:#444;line-height:1.5;margin-bottom:8px}
+.tc .av{width:22px;height:22px;background:var(--red);border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-size:9px;color:#fff;font-weight:700;margin-right:5px;vertical-align:middle}
+.tc .nm{font-size:10px;font-weight:600;color:var(--black)}
+
+/* gallery */
+.gal-scroll{display:flex;gap:10px;overflow-x:auto;padding-bottom:8px;padding-right:12px}
+.gal-scroll::-webkit-scrollbar{height:3px}
+.gal-scroll::-webkit-scrollbar-thumb{background:var(--red)}
+.gc{min-width:150px;border-radius:12px;overflow:hidden;background:#fff;flex-shrink:0}
+.gc-img{height:90px;background:linear-gradient(135deg,#1a1a1a 50%,#2d0000);display:flex;align-items:center;justify-content:center;font-size:28px;position:relative}
+.gc-img.after{background:linear-gradient(135deg,#0d0d0d 40%,var(--red))}
+.gl{background:var(--red);color:#fff;font-size:9px;font-weight:700;padding:2px 6px;position:absolute;top:6px;left:6px;border-radius:4px}
+.gl.dark{background:#222}
+.gc-cap{padding:8px 10px}
+.gc-cap p{font-size:10px;font-weight:600;color:var(--black)}
+.gc-cap small{font-size:9px;color:var(--muted)}
+
+/* FAQ */
+.faq{background:#fff;margin:0 12px 8px;border-radius:10px;overflow:hidden;flex-shrink:0}
+.faq-q{padding:12px 14px;font-size:12px;font-weight:600;color:var(--black);cursor:pointer;display:flex;justify-content:space-between;align-items:center;user-select:none}
+.faq-q:hover{background:#fafafa}
+.faq-arrow{color:var(--red);font-size:13px;transition:transform .2s;flex-shrink:0}
+.faq-q.open .faq-arrow{transform:rotate(180deg)}
+.faq-a{padding:0 14px;font-size:11px;color:#555;line-height:1.6;max-height:0;overflow:hidden;transition:max-height .3s,padding .2s}
+.faq-a.open{max-height:100px;padding:0 14px 12px}
+
+/* ══════════════════════════
+   SCREEN 2 — LAYANAN
+══════════════════════════ */
+.lay-card{
+  background:#fff;margin:0 12px 10px;border-radius:14px;
+  padding:14px;flex-shrink:0;
+  border:1.5px solid transparent;transition:border-color .2s;
+  cursor:pointer;
+}
+.lay-card.featured{border-color:var(--red)}
+.lay-card:hover{border-color:var(--red)}
+.lay-top{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px}
+.lay-name{font-family:'Bebas Neue',cursive;font-size:20px;color:var(--black);letter-spacing:.5px}
+.lay-price{font-family:'Bebas Neue',cursive;font-size:22px;color:var(--red)}
+.lay-desc{font-size:11px;color:#666;line-height:1.5;margin-bottom:10px}
+.lay-meta{display:flex;gap:10px}
+.chip{background:var(--gray);border-radius:6px;padding:4px 9px;font-size:10px;color:#555;font-weight:500}
+.incl{margin-top:10px;border-top:1px solid var(--gray2);padding-top:10px;display:flex;flex-wrap:wrap;gap:4px}
+.itag{background:#fff5f5;color:var(--red);font-size:9px;font-weight:600;padding:3px 7px;border-radius:5px;border:1px solid rgba(182,1,2,.15)}
+.lay-book-btn{
+  margin-top:12px;background:var(--red);border-radius:8px;
+  padding:9px;text-align:center;cursor:pointer;
+  border:none;width:100%;font-family:'Bebas Neue',cursive;
+  font-size:14px;color:#fff;letter-spacing:1px;
+  transition:opacity .15s;
+}
+.lay-book-btn:hover{opacity:.9}
+
+/* ══════════════════════════
+   SCREEN 3 — BOOKING
+══════════════════════════ */
+.est-box{
+  background:linear-gradient(135deg,var(--black),#200000);
+  margin:12px;border-radius:12px;padding:14px;
+  display:flex;align-items:center;justify-content:space-between;flex-shrink:0;
+}
+.est-lbl{font-size:11px;color:#aaa}
+.est-n{font-family:'Bebas Neue',cursive;font-size:28px;color:var(--red)}
+.est-u{font-size:11px;color:#aaa}
+.queue-badge{background:rgba(182,1,2,.15);border:1px solid var(--red);border-radius:8px;padding:6px 14px;text-align:center}
+.qn{font-family:'Bebas Neue',cursive;font-size:24px;color:var(--red)}
+.ql{font-size:9px;color:#aaa}
+
+.fg{margin:0 12px 10px;background:#fff;border-radius:12px;padding:14px;flex-shrink:0}
+.flabel{font-size:11px;color:var(--muted);font-weight:500;margin-bottom:6px}
+.finput{
+  width:100%;padding:10px 12px;
+  border:1.5px solid var(--gray2);border-radius:8px;
+  font-family:'DM Sans',sans-serif;font-size:12px;color:var(--black);
+  outline:none;transition:border-color .2s;
+}
+.finput:focus{border-color:var(--red)}
+.fselect{
+  width:100%;padding:10px 12px;
+  border:1.5px solid var(--gray2);border-radius:8px;
+  font-family:'DM Sans',sans-serif;font-size:12px;color:var(--black);
+  outline:none;background:#fff;appearance:none;cursor:pointer;
+  transition:border-color .2s;
+}
+.fselect:focus{border-color:var(--red)}
+.svc-picker{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px}
+.svc-opt{border:1.5px solid var(--gray2);border-radius:8px;padding:10px 8px;cursor:pointer;text-align:center;transition:all .2s}
+.svc-opt.sel{border-color:var(--red);background:#fff5f5}
+.svc-opt:hover{border-color:var(--red)}
+.so-name{font-size:11px;font-weight:600;color:var(--black)}
+.so-price{font-family:'Bebas Neue',cursive;font-size:15px;color:var(--red)}
+
+.book-btn{
+  margin:0 12px 10px;background:var(--red);border-radius:12px;
+  padding:14px;text-align:center;cursor:pointer;flex-shrink:0;
+  border:none;width:calc(100% - 24px);
+  transition:opacity .15s, transform .1s;
+}
+.book-btn:hover{opacity:.9}
+.book-btn:active{transform:scale(.98)}
+.book-btn span{font-family:'Bebas Neue',cursive;font-size:20px;color:#fff;letter-spacing:1px}
+
+/* ══════════════════════════
+   SCREEN 4 — LOKASI & KONTAK
+══════════════════════════ */
+.map-box{
+  background:var(--black);margin:12px;border-radius:14px;
+  height:160px;position:relative;display:flex;
+  align-items:center;justify-content:center;overflow:hidden;flex-shrink:0;
+  cursor:pointer;
+}
+.map-box:hover .map-open-btn{background:#e00;transform:translateY(-2px)}
+.map-grid{
+  position:absolute;inset:0;
+  background:repeating-linear-gradient(0deg,rgba(182,1,2,.05) 0,rgba(182,1,2,.05) 1px,transparent 1px,transparent 40px),
+  repeating-linear-gradient(90deg,rgba(182,1,2,.05) 0,rgba(182,1,2,.05) 1px,transparent 1px,transparent 40px);
+}
+.map-pin{font-size:34px;animation:bounce 1.5s infinite;display:block}
+@keyframes bounce{0%,100%{transform:translateY(0)}50%{transform:translateY(-7px)}}
+.map-lbl{font-size:11px;color:#aaa;margin-top:4px;text-align:center}
+.map-open-btn{
+  position:absolute;bottom:10px;right:10px;
+  background:var(--red);color:#fff;
+  font-size:10px;font-weight:600;padding:6px 12px;border-radius:8px;cursor:pointer;
+  transition:background .15s, transform .15s;
+}
+
+.addr-card{background:#fff;margin:0 12px 10px;border-radius:12px;padding:14px;flex-shrink:0}
+.addr-title{font-family:'Bebas Neue',cursive;font-size:17px;color:var(--black);letter-spacing:.5px;margin-bottom:4px}
+.addr-text{font-size:11px;color:#555;line-height:1.6}
+.addr-open{display:inline-block;background:#e8f5e9;color:#2e7d32;font-size:10px;font-weight:600;padding:3px 8px;border-radius:5px;margin-top:6px}
+
+.cta-btn{
+  display:flex;align-items:center;gap:10px;
+  background:#fff;margin:0 12px 10px;border-radius:12px;
+  padding:14px;cursor:pointer;flex-shrink:0;
+  border:1.5px solid transparent;transition:border-color .2s;
+  text-decoration:none;
+}
+.cta-btn:hover{border-color:var(--red)}
+.cta-ico{width:40px;height:40px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0}
+.cta-ico.wa{background:#25D366}
+.cta-ico.ig{background:linear-gradient(135deg,#f09433,#e6683c,#dc2743,#cc2366,#bc1888)}
+.cta-ico.ph{background:var(--black)}
+.ctitle{font-size:12px;font-weight:600;color:var(--black)}
+.csub{font-size:10px;color:var(--muted)}
+.cta-arrow{margin-left:auto;color:var(--muted);font-size:15px}
+
+.ops-card{background:#fff;margin:0 12px 10px;border-radius:12px;padding:14px;flex-shrink:0}
+.ops-row{display:grid;grid-template-columns:1fr auto;gap:6px;font-size:11px}
+.ops-row span:nth-child(odd){color:#555}
+.ops-row span:nth-child(even){font-weight:600;color:var(--black)}
+.ops-row .tutup{color:var(--red)}
+
+/* ══════════════════════════
+   SCREEN 5 — PROMO & ANTRIAN
+══════════════════════════ */
+.antrian-box{
+  background:var(--black);margin:12px;border-radius:14px;
+  padding:20px;text-align:center;position:relative;overflow:hidden;flex-shrink:0;
+}
+.antrian-box::before{
+  content:'';position:absolute;inset:0;
+  background:repeating-linear-gradient(45deg,transparent,transparent 10px,rgba(182,1,2,.03) 10px,rgba(182,1,2,.03) 20px);
+}
+.live-badge{
+  background:var(--red);color:#fff;font-size:9px;font-weight:700;
+  padding:3px 10px;border-radius:20px;letter-spacing:1px;display:inline-block;margin-bottom:10px;
+}
+.live-badge::before{content:'● ';font-size:7px}
+.ant-num{font-family:'Bebas Neue',cursive;font-size:72px;color:#fff;line-height:1;position:relative;z-index:1}
+.ant-sub{font-size:12px;color:#aaa;margin-top:4px;position:relative;z-index:1}
+
+.ant-row{display:flex;gap:10px;margin:0 12px 10px;flex-shrink:0}
+.ant-mini{background:#fff;border-radius:10px;flex:1;padding:10px;text-align:center}
+.am-n{font-family:'Bebas Neue',cursive;font-size:20px;color:var(--red)}
+.am-l{font-size:9px;color:var(--muted)}
+
+.promo-card{margin:0 12px 10px;border-radius:14px;overflow:hidden;flex-shrink:0;cursor:pointer;transition:transform .15s}
+.promo-card:hover{transform:translateY(-2px)}
+.pc-hd{background:var(--black);padding:14px;position:relative;overflow:hidden}
+.pc-hd::before{content:'';position:absolute;right:-30px;top:-30px;width:100px;height:100px;background:var(--red);border-radius:50%;opacity:.2}
+.pc-hd.red{background:linear-gradient(135deg,var(--red),#7a0001)}
+.pc-hd.dark{background:linear-gradient(135deg,#1a1a2e,#16213e)}
+.pc-tag{background:var(--red);color:#fff;font-size:9px;font-weight:700;padding:2px 8px;border-radius:4px;letter-spacing:1px;display:inline-block;margin-bottom:6px}
+.pc-tag.dark-tag{background:rgba(0,0,0,.3)}
+.pc-tag.night{background:rgba(182,1,2,.6)}
+.pc-title{font-family:'Bebas Neue',cursive;font-size:22px;color:#fff;letter-spacing:1px}
+.pc-disc{font-family:'Bebas Neue',cursive;font-size:42px;color:var(--red);letter-spacing:2px;line-height:1}
+.pc-disc.wh{color:#fff}
+.pc-body{background:#fff;padding:12px 14px}
+.pc-detail{font-size:11px;color:#555;line-height:1.6;margin-bottom:8px}
+.pc-code{background:var(--gray);border:1.5px dashed var(--red);border-radius:8px;padding:8px 12px;display:flex;align-items:center;justify-content:space-between}
+.pc-code .code{font-family:'Bebas Neue',cursive;font-size:20px;color:var(--red);letter-spacing:2px}
+.pc-code .copy{font-size:9px;color:var(--muted);cursor:pointer;padding:4px 8px;background:#fff;border-radius:4px;border:1px solid var(--gray2);transition:all .15s}
+.pc-code .copy:hover{border-color:var(--red);color:var(--red)}
+.copy-done{color:#2e7d32 !important;border-color:#2e7d32 !important}
+
+/* ══════════════════════════
+   SCREEN 6 — MEMBERSHIP
+══════════════════════════ */
+.member-card{
+  margin:0 12px 10px;
+  background:linear-gradient(135deg,var(--black) 0%,#1a0000 100%);
+  border-radius:16px;padding:18px;flex-shrink:0;
+  position:relative;overflow:hidden;
+}
+.member-card::after{content:'';position:absolute;right:-40px;bottom:-40px;width:120px;height:120px;background:var(--red);border-radius:50%;opacity:.1}
+.mbadge{background:var(--red);color:#fff;font-size:9px;font-weight:700;padding:3px 8px;border-radius:4px;letter-spacing:1px;display:inline-block;margin-bottom:10px}
+.mtitle{font-family:'Bebas Neue',cursive;font-size:22px;color:#fff;margin-bottom:4px}
+.msub{font-size:11px;color:#aaa;margin-bottom:14px}
+.stamp-row{display:flex;gap:6px;margin-bottom:12px}
+.stamp{width:36px;height:36px;border-radius:50%;border:2px solid rgba(255,255,255,.2);display:flex;align-items:center;justify-content:center;font-size:13px}
+.stamp.done{background:var(--red);border-color:var(--red)}
+.stamp.gift{background:rgba(255,255,255,.08);border-color:rgba(255,255,255,.25)}
+.mnote{font-size:10px;color:#aaa}
+
+.level-card{background:#fff;margin:0 12px 10px;border-radius:12px;padding:14px;flex-shrink:0}
+.lv-title{font-family:'Bebas Neue',cursive;font-size:16px;color:var(--black);letter-spacing:.5px;margin-bottom:10px}
+.lv-row{display:flex;align-items:center;gap:10px;border-radius:8px;padding:8px 10px;margin-bottom:6px}
+.lv-row:last-child{margin-bottom:0}
+.lv-row.neutral{background:var(--gray)}
+.lv-row.active{background:#fff5f5;border:1.5px solid var(--red)}
+.lv-ico{width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;flex-shrink:0}
+.lv-name{font-size:11px;font-weight:600}
+.lv-name.red{color:var(--red)}
+.lv-name.gray{color:#555}
+.lv-sub{font-size:9px;color:#999}
+.lv-check{margin-left:auto;font-size:10px;color:#999}
+
+.hist-card{background:#fff;margin:0 12px 10px;border-radius:12px;overflow:hidden;flex-shrink:0}
+.hist-row{display:flex;align-items:center;justify-content:space-between;padding:10px 14px;border-bottom:1px solid var(--gray2)}
+.hist-row:last-child{border-bottom:none}
+.hr-name{font-size:11px;font-weight:600;color:var(--black)}
+.hr-date{font-size:9px;color:var(--muted)}
+.hr-price{font-family:'Bebas Neue',cursive;font-size:15px;color:var(--red)}
+
+/* ── TOAST ── */
+.toast{
+  position:fixed;bottom:20px;left:50%;transform:translateX(-50%) translateY(80px);
+  background:#222;color:#fff;font-size:12px;font-weight:500;
+  padding:10px 20px;border-radius:20px;z-index:9999;
+  border:1px solid #333;
+  transition:transform .3s ease, opacity .3s ease;
+  opacity:0;pointer-events:none;white-space:nowrap;
+}
+.toast.show{transform:translateX(-50%) translateY(0);opacity:1}
+
+/* ── BOOKING SUCCESS OVERLAY ── */
+.booking-overlay{
+  position:absolute;inset:0;background:rgba(0,0,0,0.85);
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  z-index:50;opacity:0;pointer-events:none;transition:opacity .3s;
+  padding:24px;
+}
+.booking-overlay.show{opacity:1;pointer-events:all}
+.booking-success-card{background:#fff;border-radius:20px;padding:24px;text-align:center;max-width:260px;width:100%}
+.bs-icon{font-size:40px;margin-bottom:12px}
+.bs-title{font-family:'Bebas Neue',cursive;font-size:26px;color:var(--black);letter-spacing:1px;margin-bottom:4px}
+.bs-sub{font-size:11px;color:#666;line-height:1.6;margin-bottom:16px}
+.bs-detail{background:var(--gray);border-radius:10px;padding:12px;text-align:left;margin-bottom:16px;font-size:11px;color:#444;line-height:1.8}
+.bs-detail strong{color:var(--black)}
+.bs-close{background:var(--red);color:#fff;border:none;border-radius:10px;padding:10px 24px;font-family:'Bebas Neue',cursive;font-size:16px;letter-spacing:1px;cursor:pointer;width:100%;transition:opacity .15s}
+.bs-close:hover{opacity:.9}
+</style>
+</head>
+<body>
+
+<div class="canvas-title">FAMILY STEAM — <span>INTERACTIVE PROTOTYPE</span></div>
+
+<!-- Screen tabs -->
+<div class="screen-tabs">
+  <div class="stab active" onclick="goScreen('home',this)">🏠 Beranda</div>
+  <div class="stab" onclick="goScreen('layanan',this)">🧹 Layanan</div>
+  <div class="stab" onclick="goScreen('booking',this)">📅 Booking</div>
+  <div class="stab" onclick="goScreen('lokasi',this)">📍 Lokasi</div>
+  <div class="stab" onclick="goScreen('promo',this)">🎁 Promo</div>
+  <div class="stab" onclick="goScreen('profil',this)">👤 Profil</div>
+</div>
+
+<!-- Device -->
+<div class="device-wrapper">
+<div class="device">
+  <div class="status"><span>9:41</span><span>● ● ●</span></div>
+
+  <div class="screen-shell">
+
+    <!-- ═══════════════════════ SCREEN: HOME ═══════════════════════ -->
+    <div class="screen active" id="screen-home">
+      <div class="s-header">
+        <div>
+          <div class="brand">FAMILY<span>STEAM</span></div>
+          <div class="header-sub">Cuci Motor Premium · Bojongsoang, Bandung</div>
+        </div>
+        <div onclick="showToast('🔔 Notifikasi aktif!')" style="width:32px;height:32px;background:rgba(255,255,255,.08);border-radius:8px;display:flex;align-items:center;justify-content:center;cursor:pointer">🔔</div>
+      </div>
+
+      <div class="hero">
+        <div class="hero-tag">⚡ BUKA HARI INI</div>
+        <div class="hero-title">MOTOR<br>BERSIH<br><span>KELUARGA</span></div>
+        <div class="hero-sub">Cuci Express hanya 15 menit</div>
+        <button class="hero-btn" onclick="goScreen('booking')">Booking Sekarang →</button>
+      </div>
+
+      <div class="promo-strip" onclick="goScreen('promo')">
+        <div class="pi">🎓</div>
+        <div class="promo-txt">Diskon 20% untuk Mahasiswa<br><small>Tunjukkan KTM · Berlaku setiap hari · Klik untuk lihat promo</small></div>
+      </div>
+
+      <div class="sec">
+        <div class="sec-hd">
+          <div class="sec-title">Layanan Kami</div>
+          <div class="see-all" onclick="goScreen('layanan')">Lihat Semua</div>
+        </div>
+        <div class="svc-scroll">
+          <div class="svc-card pop" onclick="goScreen('booking')">
+            <div class="svc-ico">💧</div>
+            <div class="svc-name">Cuci Express</div>
+            <div class="svc-price">Rp 15K</div>
+            <div class="svc-time">⏱ 15 menit</div>
+          </div>
+          <div class="svc-card" onclick="goScreen('booking')">
+            <div class="svc-ico">✨</div>
+            <div class="svc-name">Steam Premium</div>
+            <div class="svc-price">Rp 35K</div>
+            <div class="svc-time">⏱ 30 menit</div>
+          </div>
+          <div class="svc-card" onclick="goScreen('booking')">
+            <div class="svc-ico">🛡</div>
+            <div class="svc-name">Proteksi Bodi</div>
+            <div class="svc-price">Rp 75K</div>
+            <div class="svc-time">⏱ 60 menit</div>
+          </div>
+          <div class="svc-card" onclick="goScreen('booking')">
+            <div class="svc-ico">🔧</div>
+            <div class="svc-name">Full Detailing</div>
+            <div class="svc-price">Rp 120K</div>
+            <div class="svc-time">⏱ 90 menit</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="stats">
+        <div class="stat"><div class="stat-n">2.4K+</div><div class="stat-l">Motor dicuci</div></div>
+        <div class="stat"><div class="stat-n">4.9★</div><div class="stat-l">Rating Google</div></div>
+        <div class="stat"><div class="stat-n">5 Th</div><div class="stat-l">Berpengalaman</div></div>
+      </div>
+
+      <div class="sec" style="margin-top:10px">
+        <div class="sec-hd"><div class="sec-title">Testimoni</div></div>
+        <div class="testi-scroll">
+          <div class="tc">
+            <div class="stars">★★★★★</div>
+            <div class="quote">"Cepet banget, 15 menit udah bersih kinclong. Pasti balik lagi!"</div>
+            <div><span class="av">A</span><span class="nm">Andi R.</span></div>
+          </div>
+          <div class="tc">
+            <div class="stars">★★★★★</div>
+            <div class="quote">"Steam premium-nya mantap, sela-sela motor bersih semua. Worth it!"</div>
+            <div><span class="av">S</span><span class="nm">Sari W.</span></div>
+          </div>
+          <div class="tc">
+            <div class="stars">★★★★☆</div>
+            <div class="quote">"Tempat nyaman, ada ruang tunggu ber-AC. Recommended buat yang sayang motornya."</div>
+            <div><span class="av">D</span><span class="nm">Dimas P.</span></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="sec" style="margin-top:10px">
+        <div class="sec-hd"><div class="sec-title">Before vs After</div></div>
+        <div class="gal-scroll">
+          <div class="gc">
+            <div class="gc-img">🏍<div class="gl">BEFORE</div></div>
+            <div class="gc-cap"><p>Honda Vario</p><small>Kondisi kotor</small></div>
+          </div>
+          <div class="gc">
+            <div class="gc-img after">✨<div class="gl dark">AFTER</div></div>
+            <div class="gc-cap"><p>Honda Vario</p><small>Cuci express</small></div>
+          </div>
+          <div class="gc">
+            <div class="gc-img">🛵<div class="gl">BEFORE</div></div>
+            <div class="gc-cap"><p>Yamaha NMAX</p><small>Kondisi kotor</small></div>
+          </div>
+          <div class="gc">
+            <div class="gc-img after">✨<div class="gl dark">AFTER</div></div>
+            <div class="gc-cap"><p>Yamaha NMAX</p><small>Steam premium</small></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="sp"></div>
+
+      <div class="sec"><div class="sec-hd"><div class="sec-title">FAQ</div></div></div>
+      <div class="faq">
+        <div class="faq-q open" onclick="toggleFaq(this)">Berapa lama waktu cuci express? <span class="faq-arrow" style="transform:rotate(180deg)">▾</span></div>
+        <div class="faq-a open">Cuci express membutuhkan waktu sekitar 15 menit saja. Kamu bisa tunggu di ruang tunggu ber-AC sambil minum kopi gratis!</div>
+      </div>
+      <div class="faq">
+        <div class="faq-q" onclick="toggleFaq(this)">Ada fasilitas apa di tempat tunggu? <span class="faq-arrow">▾</span></div>
+        <div class="faq-a">Kami menyediakan ruang tunggu ber-AC, WiFi gratis, minuman (kopi/teh), dan TV.</div>
+      </div>
+      <div class="faq">
+        <div class="faq-q" onclick="toggleFaq(this)">Bisa walk-in tanpa reservasi? <span class="faq-arrow">▾</span></div>
+        <div class="faq-a">Bisa! Tapi untuk menghindari antrian panjang, kami sarankan booking lewat aplikasi ini dulu.</div>
+      </div>
+      <div class="faq">
+        <div class="faq-q" onclick="toggleFaq(this)">Ada diskon untuk member? <span class="faq-arrow">▾</span></div>
+        <div class="faq-a">Ada! Program loyalty kami: cuci 5x gratis 1x. Daftar member gratis dan langsung dapat stempel pertama!</div>
+      </div>
+
+      <div class="pb"></div>
+    </div>
+
+    <!-- ═══════════════════════ SCREEN: LAYANAN ═══════════════════════ -->
+    <div class="screen" id="screen-layanan">
+      <div class="sub-header">
+        <div class="back" onclick="goScreen('home')">←</div>
+        <div class="page-title">Daftar Layanan</div>
+      </div>
+      <div class="sp"></div>
+
+      <div class="lay-card" onclick="selectLayanan(this,'Cuci Express','Rp 15K','15')">
+        <div class="badge">⚡ TERPOPULER</div>
+        <div class="lay-top">
+          <div class="lay-name">Cuci Express</div>
+          <div class="lay-price">Rp 15K</div>
+        </div>
+        <div class="lay-desc">Cuci cepat dengan air bertekanan tinggi. Cocok untuk perawatan rutin harian. Motor bersih dalam 15 menit!</div>
+        <div class="lay-meta">
+          <div class="chip">⏱ 15 menit</div>
+          <div class="chip">🏍 Semua jenis</div>
+        </div>
+        <div class="incl">
+          <div class="itag">Bilas luar</div>
+          <div class="itag">Lap kering</div>
+          <div class="itag">Semir ban</div>
+        </div>
+        <button class="lay-book-btn">Booking Layanan Ini →</button>
+      </div>
+
+      <div class="lay-card featured" onclick="selectLayanan(this,'Steam Premium','Rp 35K','30')">
+        <div class="badge">🔥 REKOMENDASI</div>
+        <div class="lay-top">
+          <div class="lay-name">Steam Premium</div>
+          <div class="lay-price">Rp 35K</div>
+        </div>
+        <div class="lay-desc">Cuci dengan uap panas bertekanan tinggi. Bersih sampai ke sela-sela rangka dan mesin. Aman untuk semua motor.</div>
+        <div class="lay-meta">
+          <div class="chip">⏱ 30 menit</div>
+          <div class="chip">🧴 Shampo khusus</div>
+        </div>
+        <div class="incl">
+          <div class="itag">Steam luar-dalam</div>
+          <div class="itag">Shampo motor</div>
+          <div class="itag">Poles body</div>
+          <div class="itag">Semir ban</div>
+        </div>
+        <button class="lay-book-btn">Booking Layanan Ini →</button>
+      </div>
+
+      <div class="lay-card" onclick="selectLayanan(this,'Proteksi Bodi','Rp 75K','60')">
+        <div class="lay-top">
+          <div class="lay-name">Proteksi Bodi</div>
+          <div class="lay-price">Rp 75K</div>
+        </div>
+        <div class="lay-desc">Perawatan bodi lengkap dengan coating nano untuk perlindungan cat. Motor tampak baru lebih lama!</div>
+        <div class="lay-meta">
+          <div class="chip">⏱ 60 menit</div>
+          <div class="chip">🛡 Nano coating</div>
+        </div>
+        <div class="incl">
+          <div class="itag">Steam premium</div>
+          <div class="itag">Nano coating</div>
+          <div class="itag">Wax body</div>
+          <div class="itag">Anti-jamur</div>
+        </div>
+        <button class="lay-book-btn">Booking Layanan Ini →</button>
+      </div>
+
+      <div class="lay-card" onclick="selectLayanan(this,'Full Detailing','Rp 120K','90')">
+        <div class="lay-top">
+          <div class="lay-name">Full Detailing</div>
+          <div class="lay-price">Rp 120K</div>
+        </div>
+        <div class="lay-desc">Paket lengkap untuk motor yang butuh perawatan total. Bersih sampai mesin, rantai, dan komponen terdalam.</div>
+        <div class="lay-meta">
+          <div class="chip">⏱ 90 menit</div>
+          <div class="chip">👑 All-inclusive</div>
+        </div>
+        <div class="incl">
+          <div class="itag">Semua paket atas</div>
+          <div class="itag">Bersih mesin</div>
+          <div class="itag">Rantai & gear</div>
+          <div class="itag">Odor fresh</div>
+        </div>
+        <button class="lay-book-btn">Booking Layanan Ini →</button>
+      </div>
+
+      <div class="pb"></div>
+    </div>
+
+    <!-- ═══════════════════════ SCREEN: BOOKING ═══════════════════════ -->
+    <div class="screen" id="screen-booking">
+      <div class="sub-header">
+        <div class="back" onclick="goScreen('home')">←</div>
+        <div class="page-title">Booking Layanan</div>
+      </div>
+
+      <div class="est-box">
+        <div>
+          <div class="est-lbl">Estimasi waktu</div>
+          <div style="display:flex;align-items:baseline;gap:4px">
+            <div class="est-n" id="est-n">15</div>
+            <div class="est-u">menit</div>
+          </div>
+        </div>
+        <div class="queue-badge">
+          <div class="qn">3</div>
+          <div class="ql">antrian kini</div>
+        </div>
+      </div>
+
+      <div class="fg">
+        <div class="flabel">Pilih Layanan</div>
+        <div class="svc-picker">
+          <div class="svc-opt sel" id="opt-express" onclick="pickSvc(this,'15','Cuci Express')">
+            <div class="so-name">Cuci Express</div>
+            <div class="so-price">Rp 15K</div>
+          </div>
+          <div class="svc-opt" id="opt-steam" onclick="pickSvc(this,'30','Steam Premium')">
+            <div class="so-name">Steam Premium</div>
+            <div class="so-price">Rp 35K</div>
+          </div>
+          <div class="svc-opt" id="opt-proteksi" onclick="pickSvc(this,'60','Proteksi Bodi')">
+            <div class="so-name">Proteksi Bodi</div>
+            <div class="so-price">Rp 75K</div>
+          </div>
+          <div class="svc-opt" id="opt-detailing" onclick="pickSvc(this,'90','Full Detailing')">
+            <div class="so-name">Full Detailing</div>
+            <div class="so-price">Rp 120K</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="fg" style="margin-top:0">
+        <div class="flabel">Pilih Tanggal</div>
+        <input type="date" class="finput" id="book-date" style="margin-bottom:10px" />
+        <div class="flabel">Pilih Jam</div>
+        <select class="fselect" id="book-time">
+          <option value="">-- Pilih jam --</option>
+          <option>08:00 – 08:30</option>
+          <option>09:00 – 09:30</option>
+          <option>10:00 – 10:30</option>
+          <option>11:00 – 11:30</option>
+          <option>13:00 – 13:30</option>
+          <option>14:00 – 14:30</option>
+          <option>16:00 – 16:30</option>
+        </select>
+      </div>
+
+      <div class="fg" style="margin-top:0">
+        <div class="flabel">Nama Lengkap</div>
+        <input class="finput" id="book-name" placeholder="Contoh: Budi Santoso" style="margin-bottom:10px" />
+        <div class="flabel">Nomor HP / WhatsApp</div>
+        <input class="finput" id="book-phone" placeholder="08xx-xxxx-xxxx" type="tel" style="margin-bottom:10px" />
+        <div class="flabel">Jenis Motor</div>
+        <input class="finput" id="book-motor" placeholder="Honda Vario 150 (Putih)" />
+      </div>
+
+      <button class="book-btn" onclick="submitBooking()"><span>Konfirmasi Booking →</span></button>
+      <div class="pb"></div>
+
+      <!-- Success overlay -->
+      <div class="booking-overlay" id="booking-overlay">
+        <div class="booking-success-card">
+          <div class="bs-icon">✅</div>
+          <div class="bs-title">Booking Berhasil!</div>
+          <div class="bs-sub">Kamu akan menerima konfirmasi via WhatsApp dalam 5 menit.</div>
+          <div class="bs-detail" id="bs-detail-text"></div>
+          <button class="bs-close" onclick="closeBooking()">Kembali ke Beranda</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══════════════════════ SCREEN: LOKASI ═══════════════════════ -->
+    <div class="screen" id="screen-lokasi">
+      <div class="sub-header">
+        <div class="back" onclick="goScreen('home')">←</div>
+        <div class="page-title">Lokasi & Kontak</div>
+      </div>
+
+      <div class="map-box" style="margin-top:12px" onclick="showToast('🗺 Membuka Google Maps...')">
+        <div class="map-grid"></div>
+        <div style="text-align:center;position:relative;z-index:1">
+          <span class="map-pin">📍</span>
+          <div class="map-lbl">Jl. Bojongsoang, Bandung</div>
+        </div>
+        <div class="map-open-btn">Buka Maps →</div>
+      </div>
+
+      <div class="addr-card">
+        <div class="addr-title">Family Steam</div>
+        <div class="addr-text">Jl. Bojongsoang No. 12B<br>Bojongsoang, Bandung 40288<br>Dekat Pintu Tol Buah Batu</div>
+        <span class="addr-open">● Buka 08:00 — 20:00</span>
+      </div>
+
+      <div class="sec"><div class="sec-hd"><div class="sec-title">Hubungi Kami</div></div></div>
+      <a class="cta-btn" href="https://wa.me/628123456789" target="_blank">
+        <div class="cta-ico wa">💬</div>
+        <div><div class="ctitle">WhatsApp Chat</div><div class="csub">Balas dalam 5 menit · 0812-3456-7890</div></div>
+        <div class="cta-arrow">→</div>
+      </a>
+      <a class="cta-btn" href="https://instagram.com/familysteam" target="_blank">
+        <div class="cta-ico ig">📸</div>
+        <div><div class="ctitle">Instagram</div><div class="csub">@familysteam · 12.4K followers</div></div>
+        <div class="cta-arrow">→</div>
+      </a>
+      <div class="cta-btn" onclick="showToast('📞 Menghubungi (022) 123-4567...')">
+        <div class="cta-ico ph">📞</div>
+        <div><div class="ctitle">Telepon</div><div class="csub">(022) 123-4567 · Jam kerja saja</div></div>
+        <div class="cta-arrow">→</div>
+      </div>
+
+      <div class="sec" style="margin-top:6px"><div class="sec-hd"><div class="sec-title">Jam Operasional</div></div></div>
+      <div class="ops-card">
+        <div class="ops-row">
+          <span>Senin — Jumat</span><span>08:00 – 20:00</span>
+          <span>Sabtu – Minggu</span><span>07:00 – 21:00</span>
+          <span>Hari Libur Nasional</span><span class="tutup">Tutup</span>
+        </div>
+      </div>
+
+      <div class="pb"></div>
+    </div>
+
+    <!-- ═══════════════════════ SCREEN: PROMO ═══════════════════════ -->
+    <div class="screen" id="screen-promo">
+      <div class="sub-header">
+        <div class="back" onclick="goScreen('home')">←</div>
+        <div class="page-title">Promo & Diskon</div>
+      </div>
+
+      <div class="antrian-box" style="margin-top:12px">
+        <div class="live-badge">LIVE</div>
+        <div class="ant-num">03</div>
+        <div class="ant-sub">Motor dalam antrian sekarang</div>
+      </div>
+      <div class="ant-row">
+        <div class="ant-mini"><div class="am-n">~15</div><div class="am-l">Menit tunggu</div></div>
+        <div class="ant-mini"><div class="am-n">2</div><div class="am-l">Mekanik aktif</div></div>
+        <div class="ant-mini"><div class="am-n">47</div><div class="am-l">Selesai hari ini</div></div>
+      </div>
+
+      <div class="sp"></div>
+
+      <div class="promo-card" onclick="copyCode('MAHA20',this)">
+        <div class="pc-hd">
+          <div class="pc-tag">🎓 MAHASISWA</div>
+          <div class="pc-title">DISKON SPESIAL</div>
+          <div class="pc-disc">20%</div>
+        </div>
+        <div class="pc-body">
+          <div class="pc-detail">Khusus mahasiswa aktif. Tunjukkan KTM atau kartu mahasiswa digital saat check-in. Berlaku untuk semua layanan setiap hari.</div>
+          <div class="pc-code"><span class="code">MAHA20</span><span class="copy" id="copy-MAHA20">📋 Salin kode</span></div>
+        </div>
+      </div>
+
+      <div class="promo-card" onclick="copyCode('HEMAT3X',this)">
+        <div class="pc-hd red">
+          <div class="pc-tag dark-tag">💰 HEMAT</div>
+          <div class="pc-title">Paket Hemat 3x</div>
+          <div class="pc-disc wh">Rp 90K</div>
+        </div>
+        <div class="pc-body">
+          <div class="pc-detail">Beli 3x cuci express sekaligus, bayar cuma Rp 90.000 (hemat Rp 15.000). Bisa digunakan kapan saja, tidak ada kadaluarsa.</div>
+          <div class="pc-code"><span class="code">HEMAT3X</span><span class="copy" id="copy-HEMAT3X">📋 Salin kode</span></div>
+        </div>
+      </div>
+
+      <div class="promo-card" onclick="copyCode('HAPPY10',this)">
+        <div class="pc-hd dark">
+          <div class="pc-tag night">🌙 MALAM</div>
+          <div class="pc-title">Happy Hour</div>
+          <div class="pc-disc wh">17–19</div>
+        </div>
+        <div class="pc-body">
+          <div class="pc-detail">Diskon 10% untuk semua layanan setiap hari pukul 17:00 – 19:00. Pas untuk pulang kerja atau kuliah!</div>
+          <div class="pc-code"><span class="code">HAPPY10</span><span class="copy" id="copy-HAPPY10">📋 Salin kode</span></div>
+        </div>
+      </div>
+
+      <div class="pb"></div>
+    </div>
+
+    <!-- ═══════════════════════ SCREEN: PROFIL ═══════════════════════ -->
+    <div class="screen" id="screen-profil">
+      <div class="s-header">
+        <div>
+          <div style="font-size:11px;color:#aaa">Selamat datang,</div>
+          <div class="brand" style="font-size:22px">BUDI <span>SANTOSO</span></div>
+        </div>
+        <div style="width:40px;height:40px;background:var(--red);border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:'Bebas Neue',cursive;font-size:18px;color:#fff">BS</div>
+      </div>
+
+      <div class="member-card" style="margin-top:12px">
+        <div class="mbadge">👑 MEMBER REGULER</div>
+        <div class="mtitle">Loyalty Stamp Card</div>
+        <div class="msub">Cuci 5x gratis 1x — kamu sudah 3 stempel!</div>
+        <div class="stamp-row">
+          <div class="stamp done">✓</div>
+          <div class="stamp done">✓</div>
+          <div class="stamp done">✓</div>
+          <div class="stamp" style="color:#555;font-size:11px">4</div>
+          <div class="stamp" style="color:#555;font-size:11px">5</div>
+          <div class="stamp gift">🎁</div>
+        </div>
+        <div class="mnote">3 lagi menuju cuci GRATIS berikutnya!</div>
+      </div>
+
+      <div class="stats">
+        <div class="stat"><div class="stat-n">3x</div><div class="stat-l">Total cuci</div></div>
+        <div class="stat"><div class="stat-n">0</div><div class="stat-l">Reward dipakai</div></div>
+        <div class="stat"><div class="stat-n">Silver</div><div class="stat-l">Level akun</div></div>
+      </div>
+
+      <div class="level-card" style="margin-top:10px">
+        <div class="lv-title">Tingkat Keanggotaan</div>
+        <div class="lv-row neutral">
+          <div class="lv-ico" style="background:#ddd">🥉</div>
+          <div><div class="lv-name gray">Bronze</div><div class="lv-sub">0–9 kunjungan</div></div>
+          <div class="lv-check">✓</div>
+        </div>
+        <div class="lv-row active">
+          <div class="lv-ico" style="background:var(--red)">🥈</div>
+          <div><div class="lv-name red">Silver — Kamu di sini</div><div class="lv-sub">10–29 kunjungan</div></div>
+        </div>
+        <div class="lv-row neutral">
+          <div class="lv-ico" style="background:#FFD700">🥇</div>
+          <div><div class="lv-name gray">Gold — 27 kunjungan lagi</div><div class="lv-sub">30+ kunjungan · Diskon 15%</div></div>
+        </div>
+      </div>
+
+      <div class="sec"><div class="sec-hd"><div class="sec-title">Riwayat Terakhir</div></div></div>
+      <div class="hist-card">
+        <div class="hist-row">
+          <div><div class="hr-name">Steam Premium</div><div class="hr-date">25 Jan 2025</div></div>
+          <div class="hr-price">Rp 35K</div>
+        </div>
+        <div class="hist-row">
+          <div><div class="hr-name">Cuci Express</div><div class="hr-date">18 Jan 2025</div></div>
+          <div class="hr-price">Rp 15K</div>
+        </div>
+        <div class="hist-row">
+          <div><div class="hr-name">Cuci Express</div><div class="hr-date">10 Jan 2025</div></div>
+          <div class="hr-price">Rp 15K</div>
+        </div>
+      </div>
+
+      <div class="pb"></div>
+    </div>
+
+  </div><!-- /screen-shell -->
+
+  <!-- Bottom Nav -->
+  <div class="bnav">
+    <div class="ni on" id="nav-home" onclick="goScreen('home')">
+      <div class="ni-ico">🏠</div><div class="ni-txt">Beranda</div>
+    </div>
+    <div class="ni" id="nav-layanan" onclick="goScreen('layanan')">
+      <div class="ni-ico">🧹</div><div class="ni-txt">Layanan</div>
+    </div>
+    <div class="ni" id="nav-booking" onclick="goScreen('booking')">
+      <div class="ni-ico">📅</div><div class="ni-txt">Booking</div>
+    </div>
+    <div class="ni" id="nav-lokasi" onclick="goScreen('lokasi')">
+      <div class="ni-ico">📍</div><div class="ni-txt">Lokasi</div>
+    </div>
+    <div class="ni" id="nav-promo" onclick="goScreen('promo')">
+      <div class="ni-ico">🎁</div><div class="ni-txt">Promo</div>
+    </div>
+    <div class="ni" id="nav-profil" onclick="goScreen('profil')">
+      <div class="ni-ico">👤</div><div class="ni-txt">Profil</div>
+    </div>
+  </div>
+
+</div><!-- /device -->
+</div><!-- /device-wrapper -->
+
+<!-- Toast -->
+<div class="toast" id="toast"></div>
+
+<script>
+// ── NAV MAPS ──
+const navMap = {
+  home: 'nav-home',
+  layanan: 'nav-layanan',
+  booking: 'nav-booking',
+  lokasi: 'nav-lokasi',
+  promo: 'nav-promo',
+  profil: 'nav-profil'
+};
+
+let currentScreen = 'home';
+let selectedLayanan = 'Cuci Express';
+let selectedMins = '15';
+
+// ── GO TO SCREEN ──
+function goScreen(name, tabEl) {
+  if (name === currentScreen) return;
+
+  // Deactivate old
+  document.getElementById('screen-' + currentScreen).classList.remove('active');
+  document.getElementById(navMap[currentScreen]).classList.remove('on');
+
+  // Activate new
+  const next = document.getElementById('screen-' + name);
+  next.classList.add('active');
+  next.scrollTop = 0;
+  document.getElementById(navMap[name]).classList.add('on');
+  currentScreen = name;
+
+  // Sync top tabs
+  document.querySelectorAll('.stab').forEach(t => t.classList.remove('active'));
+  const tabs = document.querySelectorAll('.stab');
+  const order = ['home','layanan','booking','lokasi','promo','profil'];
+  const idx = order.indexOf(name);
+  if (idx >= 0 && tabs[idx]) tabs[idx].classList.add('active');
+}
+
+// ── FAQ ──
+function toggleFaq(el) {
+  const a = el.nextElementSibling;
+  const open = a.classList.contains('open');
+  document.querySelectorAll('.faq-a').forEach(x => x.classList.remove('open'));
+  document.querySelectorAll('.faq-q').forEach(x => {
+    x.classList.remove('open');
+    x.querySelector('.faq-arrow').style.transform = '';
+  });
+  if (!open) {
+    a.classList.add('open');
+    el.classList.add('open');
+    el.querySelector('.faq-arrow').style.transform = 'rotate(180deg)';
+  }
+}
+
+// ── PICK SERVICE (booking screen) ──
+function pickSvc(el, mins, name) {
+  document.querySelectorAll('.svc-opt').forEach(x => x.classList.remove('sel'));
+  el.classList.add('sel');
+  selectedLayanan = name;
+  selectedMins = mins;
+  const t = parseInt(mins) + (3 * Math.ceil(parseInt(mins) * 0.5));
+  document.getElementById('est-n').textContent = t;
+}
+
+// ── SELECT LAYANAN → go booking ──
+function selectLayanan(el, name, price, mins) {
+  selectedLayanan = name;
+  selectedMins = mins;
+  goScreen('booking');
+  // highlight the right option
+  setTimeout(() => {
+    document.querySelectorAll('.svc-opt').forEach(x => x.classList.remove('sel'));
+    const mapOpt = {
+      'Cuci Express': 'opt-express',
+      'Steam Premium': 'opt-steam',
+      'Proteksi Bodi': 'opt-proteksi',
+      'Full Detailing': 'opt-detailing'
+    };
+    const id = mapOpt[name];
+    if (id) document.getElementById(id).classList.add('sel');
+    const t = parseInt(mins) + (3 * Math.ceil(parseInt(mins) * 0.5));
+    document.getElementById('est-n').textContent = t;
+  }, 50);
+}
+
+// ── SUBMIT BOOKING ──
+function submitBooking() {
+  const name = document.getElementById('book-name').value.trim();
+  const phone = document.getElementById('book-phone').value.trim();
+  const motor = document.getElementById('book-motor').value.trim();
+  const date = document.getElementById('book-date').value;
+  const time = document.getElementById('book-time').value;
+
+  if (!name || !phone || !motor || !date || !time) {
+    showToast('⚠️ Lengkapi semua data dulu ya!');
+    return;
+  }
+
+  const formattedDate = new Date(date).toLocaleDateString('id-ID', {weekday:'long',day:'numeric',month:'long',year:'numeric'});
+  document.getElementById('bs-detail-text').innerHTML =
+    `<strong>Layanan:</strong> ${selectedLayanan}<br>` +
+    `<strong>Tanggal:</strong> ${formattedDate}<br>` +
+    `<strong>Jam:</strong> ${time}<br>` +
+    `<strong>Nama:</strong> ${name}<br>` +
+    `<strong>Motor:</strong> ${motor}`;
+
+  document.getElementById('booking-overlay').classList.add('show');
+}
+
+function closeBooking() {
+  document.getElementById('booking-overlay').classList.remove('show');
+  // reset form
+  document.getElementById('book-name').value = '';
+  document.getElementById('book-phone').value = '';
+  document.getElementById('book-motor').value = '';
+  document.getElementById('book-date').value = '';
+  document.getElementById('book-time').value = '';
+  goScreen('home');
+}
+
+// ── COPY PROMO CODE ──
+function copyCode(code, cardEl) {
+  const copyEl = document.getElementById('copy-' + code);
+  if (!copyEl) return;
+  // Try clipboard
+  if (navigator.clipboard) {
+    navigator.clipboard.writeText(code).catch(() => {});
+  }
+  copyEl.textContent = '✓ Disalin!';
+  copyEl.classList.add('copy-done');
+  showToast('✅ Kode ' + code + ' berhasil disalin!');
+  setTimeout(() => {
+    copyEl.textContent = '📋 Salin kode';
+    copyEl.classList.remove('copy-done');
+  }, 2500);
+}
+
+// ── TOAST ──
+let toastTimer;
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => t.classList.remove('show'), 2500);
+}
+
+// ── Set default date to today ──
+document.getElementById('book-date').valueAsDate = new Date();
+</script>
+</body>
+</html>
